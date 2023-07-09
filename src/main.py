@@ -17,6 +17,7 @@ from constants.constants import P_ALPHABET, \
 from classes.moore_machine import MooreMachine
 from classes.lexical_analysis import LexicalAnalysis
 from classes.parsing import Parser
+from utils.utils import createParsingTokens
 
 moore_machine = MooreMachine( 
   P_ALPHABET, # input_alphabet
@@ -46,5 +47,6 @@ output = '\n'.join(tokens)
 with open(OUTPUT_FILE_PATH, 'w') as file:
     file.write(output)
 
-parsing = Parser(tokens)
-parsing.createParsingTokens()
+
+parsing = Parser(createParsingTokens(tokens))
+parsing.parse()

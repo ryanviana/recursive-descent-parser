@@ -1,13 +1,11 @@
+import constants.constants as constants
+from constants.constants import keyword_tokens_dict
+
 class Parser:
     def __init__(self, tokens):
         self.tokens = iter(tokens)
-        self.current_token = None
-        self.next_token = None
-        self.advance()
-    
-    def createParsingTokens(self):
-        self.tokens = [token.split(' -- ')[0] for token in self.tokens]
-        print(self.tokens)
+        self.current_token = next(self.tokens, None)
+        self.next_token = next(self.tokens, None)
 
     def advance(self):
         self.current_token = self.next_token
@@ -15,11 +13,13 @@ class Parser:
 
     def match(self, expected_token):
         if self.current_token == expected_token:
+            print(self.current_token)
             self.advance()
         else:
             raise SyntaxError(f"Expected {expected_token}, found {self.current_token}")
 
     def parse(self):
+        
         self.programa()
         if self.current_token is not None:
             raise SyntaxError(f"Unexpected token: {self.current_token}")
@@ -30,24 +30,24 @@ class Parser:
 
     def programa(self):
         try:
-            self.match("program")
-            self.match("ident")
+            self.match(keyword_tokens_dict['program'])
+            self.match(keyword_tokens_dict['ident'])
             self.match(";")
             self.corpo()
             self.match(".")
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_start"])
+            self.panic_mode([keyword_tokens_dict['program']])
 
     def corpo(self):
         try:
             self.dc()
-            self.match("begin")
+            self.match(keyword_tokens_dict['begin'])
             self.comandos()
-            self.match("end")
+            self.match(keyword_tokens_dict['end'])
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_start"])
+            self.panic_mode([keyword_tokens_dict['program']])
 
     def dc(self):
         try:
@@ -56,61 +56,61 @@ class Parser:
             self.dc_p()
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_variable", "simb_start", "simb_procedure"])
+            self.panic_mode([keyword_tokens_dict['var'], keyword_tokens_dict['program'], keyword_tokens_dict['procedure']])
 
     def dc_c(self):
         try:
-            while self.current_token == "simb_constant":
-                self.match("simb_constant")
-                self.match("simb_identifier")
+            while self.current_token == keyword_tokens_dict['const']:
+                self.match(keyword_tokens_dict['const'])
+                self.match(keyword_tokens_dict['ident'])
                 self.match("=")
                 self.match("numero")
                 self.match(";")
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_variable", "simb_start", "simb_procedure"])
+            self.panic_mode([keyword_tokens_dict['var'], keyword_tokens_dict['program'], keyword_tokens_dict['procedure']])
 
     def dc_v(self):
         try:
-            while self.current_token == "simb_variable":
-                self.match("simb_variable")
+            while self.current_token == keyword_tokens_dict['var']:
+                self.match(keyword_tokens_dict['var'])
                 self.variaveis()
                 self.match(":")
                 self.tipo_var()
                 self.match(";")
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_start", "simb_procedure"])
+            self.panic_mode([keyword_tokens_dict['program'], keyword_tokens_dict['procedure']])
 
     def tipo_var(self):
         try:
-            if self.current_token in ["simb_type_real", "simb_type_integer"]:
+            if self.current_token in [keyword_tokens_dict['real'], keyword_tokens_dict['integer']]:
                 self.advance()
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_start", "simb_procedure"])
+            self.panic_mode([keyword_tokens_dict['program'], keyword_tokens_dict['procedure']])
 
     def variaveis(self):
         try:
-            self.match("simb_identifier")
+            self.match(keyword_tokens_dict['ident'])
             while self.current_token == ",":
                 self.match(",")
-                self.match("simb_identifier")
+                self.match(keyword_tokens_dict['ident'])
         except SyntaxError as e:
             print(e)
             self.panic_mode([":"])
 
     def dc_p(self):
         try:
-            while self.current_token == "simb_procedure":
-                self.match("simb_procedure")
-                self.match("simb_identifier")
+            while self.current_token == keyword_tokens_dict['procedure']:
+                self.match(keyword_tokens_dict['procedure'])
+                self.match(keyword_tokens_dict['ident'])
                 self.parametros()
                 self.match(";")
                 self.corpo_p()
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_start"])
+            self.panic_mode([keyword_tokens_dict['program']])
 
     def parametros(self):
         try:
@@ -120,7 +120,7 @@ class Parser:
                 self.match(")")
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_start", ";"])
+            self.panic_mode([keyword_tokens_dict['program'], ";"])
 
     def lista_par(self):
         try:
@@ -137,20 +137,20 @@ class Parser:
     def corpo_p(self):
         try:
             self.dc_loc()
-            self.match("begin")
+            self.match(keyword_tokens_dict['begin'])
             self.comandos()
-            self.match("end")
+            self.match(keyword_tokens_dict['end'])
             self.match(";")
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_procedure"])
+            self.panic_mode([keyword_tokens_dict['procedure']])
 
     def dc_loc(self):
         try:
             self.dc_v()
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_start", "simb_procedure"])
+            self.panic_mode([keyword_tokens_dict['program'], keyword_tokens_dict['procedure']])
 
     def lista_arg(self):
         try:
@@ -164,7 +164,7 @@ class Parser:
 
     def argumentos(self):
         try:
-            self.match("simb_identifier")
+            self.match(keyword_tokens_dict['ident'])
             while self.current_token == ";":
                 self.match(";")
                 self.argumentos()
@@ -174,60 +174,61 @@ class Parser:
 
     def pfalsa(self):
         try:
-            if self.current_token == "simb_else":
-                self.match("simb_else")
+            if self.current_token == keyword_tokens_dict['else']:
+                self.match(keyword_tokens_dict['else'])
                 self.cmd()
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_identifier", "simb_start"])
+            self.panic_mode([keyword_tokens_dict['ident'], keyword_tokens_dict['program']])
 
     def comandos(self):
         try:
-            while self.current_token in ["simb_input", "simb_output", "simb_while", "simb_if", "simb_identifier", "simb_start"]:
+            while self.current_token in [keyword_tokens_dict['read'], keyword_tokens_dict['write'], keyword_tokens_dict['while'], keyword_tokens_dict['if'], keyword_tokens_dict['ident'], keyword_tokens_dict['begin']]:
                 self.cmd()
                 self.match(";")
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_end"])
+            self.panic_mode([keyword_tokens_dict['end']])
+
     def cmd(self):
         try:
-            if self.current_token == "simb_input":
-                self.match("simb_input")
+            if self.current_token == keyword_tokens_dict['read']:
+                self.match(keyword_tokens_dict['read'])
                 self.match("(")
                 self.variaveis()
                 self.match(")")
-            elif self.current_token == "simb_output":
-                self.match("simb_output")
+            elif self.current_token == keyword_tokens_dict['write']:
+                self.match(keyword_tokens_dict['write'])
                 self.match("(")
                 self.variaveis()
                 self.match(")")
-            elif self.current_token == "simb_while":
-                self.match("simb_while")
+            elif self.current_token == keyword_tokens_dict['while']:
+                self.match(keyword_tokens_dict['while'])
                 self.match("(")
                 self.condicao()
                 self.match(")")
-                self.match("simb_do")
+                self.match(keyword_tokens_dict['do'])
                 self.cmd()
-            elif self.current_token == "simb_if":
-                self.match("simb_if")
+            elif self.current_token == keyword_tokens_dict['if']:
+                self.match(keyword_tokens_dict['if'])
                 self.condicao()
-                self.match("simb_then")
+                self.match(keyword_tokens_dict['then'])
                 self.cmd()
                 self.pfalsa()
-            elif self.current_token == "simb_identifier":
-                self.match("simb_identifier")
+            elif self.current_token == keyword_tokens_dict['ident']:
+                self.match(keyword_tokens_dict['ident'])
                 if self.current_token == ":=":
                     self.match(":=")
                     self.expressao()
                 elif self.current_token == "(":
                     self.lista_arg()
-            elif self.current_token == "simb_start":
-                self.match("simb_start")
+            elif self.current_token == keyword_tokens_dict['begin']:
+                self.match(keyword_tokens_dict['begin'])
                 self.comandos()
-                self.match("simb_end")
+                self.match(keyword_tokens_dict['end'])
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_identifier", "simb_end"])
+            self.panic_mode([keyword_tokens_dict['ident'], keyword_tokens_dict['end']])
 
     def condicao(self):
         try:
@@ -236,15 +237,15 @@ class Parser:
             self.expressao()
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_then"])
+            self.panic_mode([keyword_tokens_dict['then']])
 
     def relacao(self):
         try:
-            if self.current_token in ["simb_equal", "simb_not_equal", "simb_greater_equal", "simb_less_equal", "simb_greater", "simb_less"]:
+            if self.current_token in [keyword_tokens_dict['equal'], keyword_tokens_dict['not_equal'], keyword_tokens_dict['greater_equal'], keyword_tokens_dict['less_equal'], keyword_tokens_dict['greater'], keyword_tokens_dict['less']]:
                 self.advance()
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_identifier", "simb_number"])
+            self.panic_mode([keyword_tokens_dict['ident'], keyword_tokens_dict['number']])
 
     def expressao(self):
         try:
@@ -252,33 +253,33 @@ class Parser:
             self.outros_termos()
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_identifier", "simb_number"])
+            self.panic_mode([keyword_tokens_dict['ident'], keyword_tokens_dict['number']])
 
     def op_un(self):
         try:
-            if self.current_token in ["simb_plus", "simb_minus"]:
+            if self.current_token in [keyword_tokens_dict['plus'], keyword_tokens_dict['minus']]:
                 self.advance()
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_identifier", "simb_number", "simb_open_parenthesis"])
+            self.panic_mode([keyword_tokens_dict['ident'], keyword_tokens_dict['number'], keyword_tokens_dict['open_parenthesis']])
 
     def outros_termos(self):
         try:
-            if self.current_token in ["simb_plus", "simb_minus"]:
+            if self.current_token in [keyword_tokens_dict['plus'], keyword_tokens_dict['minus']]:
                 self.op_ad()
                 self.termo()
                 self.outros_termos()
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_close_parenthesis", "simb_semicolon", "simb_then"])
+            self.panic_mode([keyword_tokens_dict['close_parenthesis'], keyword_tokens_dict['semicolon'], keyword_tokens_dict['then']])
 
     def op_ad(self):
         try:
-            if self.current_token in ["simb_plus", "simb_minus"]:
+            if self.current_token in [keyword_tokens_dict['plus'], keyword_tokens_dict['minus']]:
                 self.advance()
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_identifier", "simb_number", "simb_open_parenthesis"])
+            self.panic_mode([keyword_tokens_dict['ident'], keyword_tokens_dict['number'], keyword_tokens_dict['open_parenthesis']])
 
     def termo(self):
         try:
@@ -287,44 +288,44 @@ class Parser:
             self.mais_fatores()
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_close_parenthesis", "simb_semicolon", "simb_plus", "simb_minus", "simb_then"])
+            self.panic_mode([keyword_tokens_dict['close_parenthesis'], keyword_tokens_dict['semicolon'], keyword_tokens_dict['plus'], keyword_tokens_dict['minus'], keyword_tokens_dict['then']])
 
     def mais_fatores(self):
         try:
-            if self.current_token in ["simb_mul", "simb_div"]:
+            if self.current_token in [keyword_tokens_dict['mul'], keyword_tokens_dict['div']]:
                 self.op_mul()
                 self.fator()
                 self.mais_fatores()
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_close_parenthesis", "simb_semicolon", "simb_plus", "simb_minus", "simb_then"])
+            self.panic_mode([keyword_tokens_dict['close_parenthesis'], keyword_tokens_dict['semicolon'], keyword_tokens_dict['plus'], keyword_tokens_dict['minus'], keyword_tokens_dict['then']])
 
     def op_mul(self):
         try:
-            if self.current_token in ["simb_mul", "simb_div"]:
+            if self.current_token in [keyword_tokens_dict['mul'], keyword_tokens_dict['div']]:
                 self.advance()
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_identifier", "simb_number", "simb_open_parenthesis"])
+            self.panic_mode([keyword_tokens_dict['ident'], keyword_tokens_dict['number'], keyword_tokens_dict['open_parenthesis']])
 
     def fator(self):
         try:
-            if self.current_token == "simb_identifier":
-                self.match("simb_identifier")
-            elif self.current_token == "numero":
-                self.match("numero")
-            elif self.current_token == "simb_open_parenthesis":
-                self.match("simb_open_parenthesis")
+            if self.current_token == keyword_tokens_dict['ident']:
+                self.match(keyword_tokens_dict['ident'])
+            elif self.current_token == keyword_tokens_dict['numero']:
+                self.match(keyword_tokens_dict['numero'])
+            elif self.current_token == keyword_tokens_dict['open_parenthesis']:
+                self.match(keyword_tokens_dict['open_parenthesis'])
                 self.expressao()
-                self.match("simb_close_parenthesis")
+                self.match(keyword_tokens_dict['close_parenthesis'])
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_close_parenthesis", "simb_semicolon", "simb_mul", "simb_div", "simb_plus", "simb_minus", "simb_then"])
+            self.panic_mode([keyword_tokens_dict['close_parenthesis'], keyword_tokens_dict['semicolon'], keyword_tokens_dict['mul'], keyword_tokens_dict['div'], keyword_tokens_dict['plus'], keyword_tokens_dict['minus'], keyword_tokens_dict['then']])
 
     def numero(self):
         try:
-            if self.current_token in ["numero_int", "numero_real"]:
+            if self.current_token in [keyword_tokens_dict['numero_int'], keyword_tokens_dict['numero_real']]:
                 self.advance()
         except SyntaxError as e:
             print(e)
-            self.panic_mode(["simb_open_parenthesis", "simb_close_parenthesis", "simb_semicolon", "simb_mul", "simb_div", "simb_plus", "simb_minus", "simb_then"])
+            self.panic_mode([keyword_tokens_dict['open_parenthesis'], keyword_tokens_dict['close_parenthesis'], keyword_tokens_dict['semicolon'], keyword_tokens_dict['mul'], keyword_tokens_dict['div'], keyword_tokens_dict['plus'], keyword_tokens_dict['minus'], keyword_tokens_dict['then']])

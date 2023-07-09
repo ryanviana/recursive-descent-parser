@@ -12,6 +12,10 @@
 
 from typing import List, Dict
 
+def createParsingTokens(tokens):
+    tokens = [token.split(' -- ')[0] for token in tokens[1:]]
+    return tokens
+
 def handleError(current_state: int, char: str, input_alphabet: List[str]):
 
   """
