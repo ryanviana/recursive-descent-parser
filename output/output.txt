@@ -9,7 +9,6 @@ integer_number -- "1"
 closing_braces_symbol -- "}"
 simb_variable -- "var"
 simb_identifier -- "x"
-Invalid character: @
 comma_symbol -- ","
 simb_identifier -- "aux"
 comma_symbol -- ","

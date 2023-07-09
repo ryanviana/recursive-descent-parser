@@ -6,20 +6,24 @@ class Parser:
         self.tokens = iter(tokens)
         self.current_token = next(self.tokens, None)
         self.next_token = next(self.tokens, None)
+        # self.teste = 1
 
     def advance(self):
+        # print(f"Advanced {self.teste}!: {self.current_token}")
+        # self.teste += 1
         self.current_token = self.next_token
         self.next_token = next(self.tokens, None)
 
     def match(self, expected_token):
+        #print(self.current_token, expected_token)
         if self.current_token == expected_token:
-            print(self.current_token)
             self.advance()
         else:
+            # print(f"Error {self.teste}!: {self.current_token}")
+            # self.teste += 1
             raise SyntaxError(f"Expected {expected_token}, found {self.current_token}")
 
     def parse(self):
-        
         self.programa()
         if self.current_token is not None:
             raise SyntaxError(f"Unexpected token: {self.current_token}")
@@ -27,6 +31,16 @@ class Parser:
     def panic_mode(self, synchronization_set):
         while self.current_token is not None and self.current_token not in synchronization_set:
             self.advance()
+    
+    def comment(self):
+        try:
+            self.match("opening_braces_symbol")
+            while self.current_token != "closing_braces_symbol":
+                self.advance()
+            self.match("closing_braces_symbol")
+        except SyntaxError as e:
+            print(e)
+            self.panic_mode([keyword_tokens_dict['program']])
 
     def programa(self):
         try:
@@ -34,7 +48,7 @@ class Parser:
             self.match(keyword_tokens_dict['ident'])
             self.match("semicolon_symbol")
             self.corpo()
-            self.match(".")
+            self.match("period_symbol")
         except SyntaxError as e:
             print(e)
             self.panic_mode([keyword_tokens_dict['program']])
@@ -86,6 +100,7 @@ class Parser:
         try:
             if self.current_token in [keyword_tokens_dict['real'], keyword_tokens_dict['integer']]:
                 self.advance()
+
         except SyntaxError as e:
             print(e)
             self.panic_mode([keyword_tokens_dict['program'], keyword_tokens_dict['procedure']])
@@ -94,12 +109,12 @@ class Parser:
     def variaveis(self):
         try:
             self.match(keyword_tokens_dict['ident'])
-            while self.current_token == ",":
-                self.match(",")
+            while self.current_token == "comma_symbol":
+                self.match("comma_symbol")
                 self.match(keyword_tokens_dict['ident'])
         except SyntaxError as e:
             print(e)
-            self.panic_mode([":"])
+            self.panic_mode(["colon_symbol"])
 
     def dc_p(self):
         try:
@@ -259,29 +274,29 @@ class Parser:
 
     def op_un(self):
         try:
-            if self.current_token in [keyword_tokens_dict['plus'], keyword_tokens_dict['minus']]:
+            if self.current_token in ["addition_symbol", "subtraction_symbol"]:
                 self.advance()
         except SyntaxError as e:
             print(e)
-            self.panic_mode([keyword_tokens_dict['ident'], keyword_tokens_dict['number'], keyword_tokens_dict['open_parenthesis']])
+            self.panic_mode([keyword_tokens_dict['ident'], keyword_tokens_dict['number'], "opening_parenthesis"])
 
     def outros_termos(self):
         try:
-            if self.current_token in [keyword_tokens_dict['plus'], keyword_tokens_dict['minus']]:
+            if self.current_token in ["addition_symbol", "subtraction_symbol"]:
                 self.op_ad()
                 self.termo()
                 self.outros_termos()
         except SyntaxError as e:
             print(e)
-            self.panic_mode([keyword_tokens_dict['close_parenthesis'], keyword_tokens_dict['semicolon'], keyword_tokens_dict['then']])
+            self.panic_mode(["closing_parenthesis", keyword_tokens_dict['semicolon'], keyword_tokens_dict['then']])
 
     def op_ad(self):
         try:
-            if self.current_token in [keyword_tokens_dict['plus'], keyword_tokens_dict['minus']]:
+            if self.current_token in ["addition_symbol", "subtraction_symbol"]:
                 self.advance()
         except SyntaxError as e:
             print(e)
-            self.panic_mode([keyword_tokens_dict['ident'], keyword_tokens_dict['number'], keyword_tokens_dict['open_parenthesis']])
+            self.panic_mode([keyword_tokens_dict['ident'], keyword_tokens_dict['number'], "opening_parenthesis"])
 
     def termo(self):
         try:
@@ -290,34 +305,34 @@ class Parser:
             self.mais_fatores()
         except SyntaxError as e:
             print(e)
-            self.panic_mode([keyword_tokens_dict['close_parenthesis'], keyword_tokens_dict['semicolon'], keyword_tokens_dict['plus'], keyword_tokens_dict['minus'], keyword_tokens_dict['then']])
+            self.panic_mode(["closing_parenthesis", keyword_tokens_dict['semicolon'], "addition_symbol", "subtraction_symbol", keyword_tokens_dict['then']])
 
     def mais_fatores(self):
         try:
-            if self.current_token in [keyword_tokens_dict['mul'], keyword_tokens_dict['div']]:
+            if self.current_token in ["multiplication_symbol", "division_symbol"]:
                 self.op_mul()
                 self.fator()
                 self.mais_fatores()
         except SyntaxError as e:
             print(e)
-            self.panic_mode([keyword_tokens_dict['close_parenthesis'], keyword_tokens_dict['semicolon'], keyword_tokens_dict['plus'], keyword_tokens_dict['minus'], keyword_tokens_dict['then']])
+            self.panic_mode(["closing_parenthesis", keyword_tokens_dict['semicolon'], "addition_symbol", "subtraction_symbol", keyword_tokens_dict['then']])
 
     def op_mul(self):
         try:
-            if self.current_token in [keyword_tokens_dict['mul'], keyword_tokens_dict['div']]:
+            if self.current_token in ["multiplication_symbol", "division_symbol"]:
                 self.advance()
         except SyntaxError as e:
             print(e)
-            self.panic_mode([keyword_tokens_dict['ident'], keyword_tokens_dict['number'], keyword_tokens_dict['open_parenthesis']])
+            self.panic_mode([keyword_tokens_dict['ident'], keyword_tokens_dict['number'], "opening_parenthesis"])
 
     def fator(self):
         try:
             if self.current_token == keyword_tokens_dict['ident']:
                 self.match(keyword_tokens_dict['ident'])
-            elif self.current_token == keyword_tokens_dict['open_parenthesis']:
-                self.match(keyword_tokens_dict['open_parenthesis'])
+            elif self.current_token == "opening_parenthesis":
+                self.match("opening_parenthesis")
                 self.expressao()
-                self.match(keyword_tokens_dict['close_parenthesis'])
+                self.match("closing_parenthesis")
             else:  
                 #self.current_token == keyword_tokens_dict['numero']:
                 #self.match(keyword_tokens_dict['numero'])
@@ -325,12 +340,12 @@ class Parser:
             
         except SyntaxError as e:
             print(e)
-            self.panic_mode([keyword_tokens_dict['close_parenthesis'], keyword_tokens_dict['semicolon'], keyword_tokens_dict['mul'], keyword_tokens_dict['div'], keyword_tokens_dict['plus'], keyword_tokens_dict['minus'], keyword_tokens_dict['then']])
+            self.panic_mode(["closing_parenthesis", keyword_tokens_dict['semicolon'], "multiplication_symbol", "division_symbol", "addition_symbol", "subtraction_symbol", keyword_tokens_dict['then']])
 
     def numero(self):
         try:
-            if self.current_token in [keyword_tokens_dict['numero_int'], keyword_tokens_dict['numero_real']]:
+            if self.current_token in ["integer_number", "floating_point_number"]:
                 self.advance()
         except SyntaxError as e:
             print(e)
-            self.panic_mode([keyword_tokens_dict['open_parenthesis'], keyword_tokens_dict['close_parenthesis'], keyword_tokens_dict['semicolon'], keyword_tokens_dict['mul'], keyword_tokens_dict['div'], keyword_tokens_dict['plus'], keyword_tokens_dict['minus'], keyword_tokens_dict['then']])
+            self.panic_mode(["opening_parenthesis", "closing_parenthesis", keyword_tokens_dict['semicolon'], "multiplication_symbol", "division_symbol", "addition_symbol", "subtraction_symbol", keyword_tokens_dict['then']])

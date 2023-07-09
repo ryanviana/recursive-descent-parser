@@ -12,9 +12,24 @@
 
 from typing import List, Dict
 
-def createParsingTokens(tokens):
+def getValidTokens(tokens):
     tokens = [token.split(' -- ')[0] for token in tokens[1:]]
-    return tokens
+    #print(tokens)
+    return removeComments(tokens)
+
+def removeComments(tokens):
+    output_tokens = []
+    inside_braces = False
+
+    for token in tokens:
+        if token == 'opening_braces_symbol':
+            inside_braces = True
+        elif token == 'closing_braces_symbol':
+            inside_braces = False
+        elif not inside_braces:
+            output_tokens.append(token)
+    
+    return output_tokens
 
 def handleError(current_state: int, char: str, input_alphabet: List[str]):
 
