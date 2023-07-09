@@ -32,7 +32,7 @@ class Parser:
         try:
             self.match(keyword_tokens_dict['program'])
             self.match(keyword_tokens_dict['ident'])
-            self.match(";")
+            self.match("semicolon_symbol")
             self.corpo()
             self.match(".")
         except SyntaxError as e:
@@ -63,9 +63,9 @@ class Parser:
             while self.current_token == keyword_tokens_dict['const']:
                 self.match(keyword_tokens_dict['const'])
                 self.match(keyword_tokens_dict['ident'])
-                self.match("=")
-                self.match("numero")
-                self.match(";")
+                self.match("assignment_symbol")
+                self.numero()
+                self.match("semicolon_symbol")
         except SyntaxError as e:
             print(e)
             self.panic_mode([keyword_tokens_dict['var'], keyword_tokens_dict['program'], keyword_tokens_dict['procedure']])
@@ -75,9 +75,9 @@ class Parser:
             while self.current_token == keyword_tokens_dict['var']:
                 self.match(keyword_tokens_dict['var'])
                 self.variaveis()
-                self.match(":")
+                self.match("colon_symbol")
                 self.tipo_var()
-                self.match(";")
+                self.match("semicolon_symbol")
         except SyntaxError as e:
             print(e)
             self.panic_mode([keyword_tokens_dict['program'], keyword_tokens_dict['procedure']])
@@ -90,6 +90,7 @@ class Parser:
             print(e)
             self.panic_mode([keyword_tokens_dict['program'], keyword_tokens_dict['procedure']])
 
+    #This concatenate procedures 'variaveis' and 'mais_var'.
     def variaveis(self):
         try:
             self.match(keyword_tokens_dict['ident'])
@@ -106,7 +107,7 @@ class Parser:
                 self.match(keyword_tokens_dict['procedure'])
                 self.match(keyword_tokens_dict['ident'])
                 self.parametros()
-                self.match(";")
+                self.match("semicolon_symbol")
                 self.corpo_p()
         except SyntaxError as e:
             print(e)
@@ -114,25 +115,26 @@ class Parser:
 
     def parametros(self):
         try:
-            if self.current_token == "(":
-                self.match("(")
+            if self.current_token == "opening_parenthesis_symbol":
+                self.match("opening_parenthesis_symbol")
                 self.lista_par()
-                self.match(")")
+                self.match("closing_parenthesis_symbol")
         except SyntaxError as e:
             print(e)
-            self.panic_mode([keyword_tokens_dict['program'], ";"])
+            self.panic_mode([keyword_tokens_dict['program'], "semicolon_symbol"])
 
+    #This concatenate procedures 'lista_par' and 'mais_par'.
     def lista_par(self):
         try:
             self.variaveis()
-            self.match(":")
+            self.match("colon_symbol")
             self.tipo_var()
-            while self.current_token == ";":
-                self.match(";")
+            while self.current_token == "semicolon_symbol":
+                self.match("semicolon_symbol")
                 self.lista_par()
         except SyntaxError as e:
             print(e)
-            self.panic_mode([")"])
+            self.panic_mode(["closing_parenthesis_symbol"])
 
     def corpo_p(self):
         try:
@@ -140,7 +142,7 @@ class Parser:
             self.match(keyword_tokens_dict['begin'])
             self.comandos()
             self.match(keyword_tokens_dict['end'])
-            self.match(";")
+            self.match("semicolon_symbol")
         except SyntaxError as e:
             print(e)
             self.panic_mode([keyword_tokens_dict['procedure']])
@@ -154,19 +156,19 @@ class Parser:
 
     def lista_arg(self):
         try:
-            if self.current_token == "(":
-                self.match("(")
+            if self.current_token == "opening_parenthesis_symbol":
+                self.match("opening_parenthesis_symbol")
                 self.argumentos()
-                self.match(")")
+                self.match("closing_parenthesis_symbol")
         except SyntaxError as e:
             print(e)
-            self.panic_mode([")"])
+            self.panic_mode(["closing_parenthesis_symbol"])
 
     def argumentos(self):
         try:
             self.match(keyword_tokens_dict['ident'])
-            while self.current_token == ";":
-                self.match(";")
+            while self.current_token == "semicolon_symbol":
+                self.match("semicolon_symbol")
                 self.argumentos()
         except SyntaxError as e:
             print(e)
@@ -185,7 +187,7 @@ class Parser:
         try:
             while self.current_token in [keyword_tokens_dict['read'], keyword_tokens_dict['write'], keyword_tokens_dict['while'], keyword_tokens_dict['if'], keyword_tokens_dict['ident'], keyword_tokens_dict['begin']]:
                 self.cmd()
-                self.match(";")
+                self.match("semicolon_symbol")
         except SyntaxError as e:
             print(e)
             self.panic_mode([keyword_tokens_dict['end']])
@@ -194,19 +196,19 @@ class Parser:
         try:
             if self.current_token == keyword_tokens_dict['read']:
                 self.match(keyword_tokens_dict['read'])
-                self.match("(")
+                self.match("opening_parenthesis_symbol")
                 self.variaveis()
-                self.match(")")
+                self.match("closing_parenthesis_symbol")
             elif self.current_token == keyword_tokens_dict['write']:
                 self.match(keyword_tokens_dict['write'])
-                self.match("(")
+                self.match("opening_parenthesis_symbol")
                 self.variaveis()
-                self.match(")")
+                self.match("closing_parenthesis_symbol")
             elif self.current_token == keyword_tokens_dict['while']:
                 self.match(keyword_tokens_dict['while'])
-                self.match("(")
+                self.match("opening_parenthesis_symbol")
                 self.condicao()
-                self.match(")")
+                self.match("closing_parenthesis_symbol")
                 self.match(keyword_tokens_dict['do'])
                 self.cmd()
             elif self.current_token == keyword_tokens_dict['if']:
@@ -217,10 +219,10 @@ class Parser:
                 self.pfalsa()
             elif self.current_token == keyword_tokens_dict['ident']:
                 self.match(keyword_tokens_dict['ident'])
-                if self.current_token == ":=":
-                    self.match(":=")
+                if self.current_token == "assignment_symbol":
+                    self.match("assignment_symbol")
                     self.expressao()
-                elif self.current_token == "(":
+                elif self.current_token == "opening_parenthesis_symbol":
                     self.lista_arg()
             elif self.current_token == keyword_tokens_dict['begin']:
                 self.match(keyword_tokens_dict['begin'])
@@ -312,12 +314,15 @@ class Parser:
         try:
             if self.current_token == keyword_tokens_dict['ident']:
                 self.match(keyword_tokens_dict['ident'])
-            elif self.current_token == keyword_tokens_dict['numero']:
-                self.match(keyword_tokens_dict['numero'])
             elif self.current_token == keyword_tokens_dict['open_parenthesis']:
                 self.match(keyword_tokens_dict['open_parenthesis'])
                 self.expressao()
                 self.match(keyword_tokens_dict['close_parenthesis'])
+            else:  
+                #self.current_token == keyword_tokens_dict['numero']:
+                #self.match(keyword_tokens_dict['numero'])
+                self.numero()
+            
         except SyntaxError as e:
             print(e)
             self.panic_mode([keyword_tokens_dict['close_parenthesis'], keyword_tokens_dict['semicolon'], keyword_tokens_dict['mul'], keyword_tokens_dict['div'], keyword_tokens_dict['plus'], keyword_tokens_dict['minus'], keyword_tokens_dict['then']])
