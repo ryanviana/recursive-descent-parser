@@ -143,5 +143,7 @@ keyword_tokens_dict = {
     'do': 'simb_do',
     'if': 'simb_if',
     'then': 'simb_then',
-    'else': 'simb_else'
+    'else': 'simb_else',
+    'for': 'simb_for',
+    'to': 'simb_to'
 }
