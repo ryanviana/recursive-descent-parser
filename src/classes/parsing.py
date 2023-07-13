@@ -15,14 +15,18 @@ class Parser:
     def match(self, expected_token):
         if self.current_token == expected_token:
             self.advance()
+        #elif the current token is null
+        elif self.current_token is None:
+            print(f"Fatal Error: panic mode could not recover from this.")
+            sys.exit(1)
         else:
-            raise SyntaxError(f"Expected: {user_friendly_dict[expected_token]}, found: {user_friendly_dict[self.current_token]}.")
+            raise SyntaxError(f"Expected: {expected_token}, found: {self.current_token}.")
 
     def parse(self):
         try:
             self.programa()
             if self.current_token is not None:
-                raise SyntaxError(f"Unexpected token: {user_friendly_dict[self.current_token]}")
+                raise SyntaxError(f"Unexpected token: {self.current_token}")
             else:
                 print("Parsing completed successfully!")
         except SyntaxError as e:
@@ -241,7 +245,7 @@ class Parser:
                 self.cmd()
         except SyntaxError as e:
             print(f"SyntaxError: {e}")
-            self.panic_mode([keyword_tokens_dict['ident'], keyword_tokens_dict['end']])
+            self.panic_mode(['closing_parenthesis_symbol'])
 
     def condicao(self):
         try:
